@@ -1,0 +1,89 @@
+﻿using JetBrains.Annotations;
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
+using Xpress.Core.Domain.Entities;
+using Xpress.Core.Exceptions;
+
+namespace Xpress.Core.Utils
+{
+    /// <summary>
+    /// Some helper methods for entities.
+    /// </summary>
+    public static class EntityHelper
+    {
+        public static bool IsEntity([NotNull] Type type)
+        {
+            return typeof(IEntity).IsAssignableFrom(type);
+        }
+
+        public static bool HasDefaultId<TKey>(IEntity<TKey> entity)
+        {
+            if (EqualityComparer<TKey>.Default.Equals(entity.Id, default(TKey)))
+            {
+                return true;
+            }
+
+            //Workaround for EF Core since it sets int/long to min value when attaching to dbcontext
+            if (typeof(TKey) == typeof(int))
+            {
+                return Convert.ToInt32(entity.Id) <= 0;
+            }
+
+            if (typeof(TKey) == typeof(long))
+            {
+                return Convert.ToInt64(entity.Id) <= 0;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to find the primary key type of the given entity type.
+        /// May return null if given type does not implement <see cref="IEntity{TKey}"/>
+        /// </summary>
+        [CanBeNull]
+        public static Type FindPrimaryKeyType<TEntity>()
+            where TEntity : IEntity
+        {
+            return FindPrimaryKeyType(typeof(TEntity));
+        }
+
+        /// <summary>
+        /// Tries to find the primary key type of the given entity type.
+        /// May return null if given type does not implement <see cref="IEntity{TKey}"/>
+        /// </summary>
+        [CanBeNull]
+        public static Type FindPrimaryKeyType([NotNull] Type entityType)
+        {
+            if (!typeof(IEntity).IsAssignableFrom(entityType))
+            {
+                throw new XpressException($"Given {nameof(entityType)} is not an entity. It should implement {typeof(IEntity).AssemblyQualifiedName}!");
+            }
+
+            foreach (var interfaceType in entityType.GetTypeInfo().GetInterfaces())
+            {
+                if (interfaceType.GetTypeInfo().IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IEntity<>))
+                {
+                    return interfaceType.GenericTypeArguments[0];
+                }
+            }
+
+            return null;
+        }
+
+        public static Expression<Func<TEntity, bool>> CreateEqualityExpressionForId<TEntity, TIdentity>(TIdentity id)
+            where TEntity : IEntity<TIdentity>
+            where TIdentity : IIdentity
+        {
+            var lambdaParam = Expression.Parameter(typeof(TEntity));
+            var lambdaBody = Expression.Equal(
+                Expression.PropertyOrField(lambdaParam, nameof(Entity<TIdentity>.Id)),
+                Expression.Constant(id, typeof(TIdentity))
+            );
+
+            return Expression.Lambda<Func<TEntity, bool>>(lambdaBody, lambdaParam);
+        }
+    }
+}

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netcoreapp2.2\Xpress.Demo.Application.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotNetCore.CAP.RabbitMQ" Version="2.4.2" />
+    <PackageReference Include="Exceptionless" Version="4.3.2012" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Source\Xpress.AutoMapper\Xpress.AutoMapper.csproj" />
+    <ProjectReference Include="..\..\Source\Xpress.Core\Xpress.Core.csproj" />
+    <ProjectReference Include="..\Xpress.Demo.Core\Xpress.Demo.Core.csproj" />
+  </ItemGroup>
+
+</Project>
