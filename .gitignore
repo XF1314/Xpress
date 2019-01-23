@@ -27,3 +27,9 @@ obj/
 [Rr]elease*/
 _ReSharper*/
 [Tt]est[Rr]esult*
+
+#Ignore thumbnails created by Windows
+#Ignore files built by Visual Studio
+.vs/
+#Nuget packages folder
+packages/
