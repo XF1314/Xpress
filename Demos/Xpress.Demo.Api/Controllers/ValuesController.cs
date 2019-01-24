@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Xpress.Core.BackgroundJobs;
 using Xpress.Core.Caching;
 using Xpress.Core.DependencyInjection;
 using Xpress.Core.EventBus.Cap;
@@ -14,6 +15,7 @@ using Xpress.Core.EventBus.Local;
 using Xpress.Core.Uow;
 using Xpress.Demo.Api.Models;
 using Xpress.Demo.Application;
+using Xpress.Demo.Application.BackgroundJobs;
 using Xpress.Demo.Application.LocalEventHandlers;
 using Xpress.Demo.Core.Events;
 
@@ -31,11 +33,12 @@ namespace Xpress.Demo.Api.Controllers
         private readonly ILocalEventBus _localEventBus;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ICapEventPublisher _capEventPublisher;
+        private readonly IBackgroundJobManager _backgroundJobManager;
 
         public ILogger<ValuesController> Logger { get; set; }
 
         public ValuesController(ILogger<ValuesController> logger, IDemoService demoService,
-            IServiceScopeFactory serviceScopeFactory, IUnitOfWorkManager unitOfWorkManager,
+            IServiceScopeFactory serviceScopeFactory, IUnitOfWorkManager unitOfWorkManager, IBackgroundJobManager backgroundJobManager,
             IServiceProvider serviceProvider, IConfiguration configuration, ILocalEventBus localEventBus, ICapEventPublisher capEventPublisher)
         {
             _logger = logger;
@@ -46,6 +49,7 @@ namespace Xpress.Demo.Api.Controllers
             _localEventBus = localEventBus;
             _serviceScopeFactory = serviceScopeFactory;
             _capEventPublisher = capEventPublisher;
+            _backgroundJobManager = backgroundJobManager;
             Logger = NullLogger<ValuesController>.Instance;//Controller 无法进行属性注入？？
         }
 
@@ -80,11 +84,12 @@ namespace Xpress.Demo.Api.Controllers
         [HttpPost]
         public async Task Post([FromBody] string value)
         {
-            var ss = typeof(TestLocalEventHandler).IsAssignableFrom(typeof(ILocalEventHandler));
-            var dd = typeof(TestLocalEventHandler).IsAssignableFrom(typeof(ITransientDependency));
-            var sd = typeof(TestLocalEventHandler).IsAssignableFrom(typeof(ILocalEventHandler<TestLocalEvent>));
-            await _localEventBus.PublishAsync(new TestLocalEvent { Message = value });
-            await _capEventPublisher.PublishAsync(new TestCapEvent { Message = value });
+            //var ss = typeof(TestLocalEventHandler).IsAssignableFrom(typeof(ILocalEventHandler));
+            //var dd = typeof(TestLocalEventHandler).IsAssignableFrom(typeof(ITransientDependency));
+            //var sd = typeof(TestLocalEventHandler).IsAssignableFrom(typeof(ILocalEventHandler<TestLocalEvent>));
+            //await _localEventBus.PublishAsync(new TestLocalEvent { Message = value });
+            //await _capEventPublisher.PublishAsync(new TestCapEvent { Message = value });
+            await _backgroundJobManager.EnqueueAsync(new TestBackgroundEventArgs { Message = value });
         }
 
         // PUT api/values/5

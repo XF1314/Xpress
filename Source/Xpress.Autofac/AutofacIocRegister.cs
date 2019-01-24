@@ -11,6 +11,7 @@ using Autofac.Core;
 using Xpress.Core.DependencyInjection;
 using Xpress.Core;
 using Xpress.Core.EventBus.Local;
+using Xpress.Core.BackgroundJobs;
 
 namespace Xpress.Autofac
 {
@@ -125,7 +126,7 @@ namespace Xpress.Autofac
         {
             var assemblyTypes = assembly.GetTypes();
             assemblyTypes
-                .Where(type =>  type.IsClass  && !type.IsAbstract 
+                .Where(type => type.IsClass && !type.IsAbstract
                 && type.GetInterfaces().Any(i => i.GetTypeInfo() == typeof(ILocalEventHandler))).ToList()
                 .ForEach(x =>
                 {
@@ -133,6 +134,14 @@ namespace Xpress.Autofac
                     {
                         servicesBuilderOptions.LocalEventBusOptions.Handlers.Add(x);
                     }
+                });
+
+            assemblyTypes
+                .Where(type => type.IsClass && !type.IsAbstract
+                && type.GetInterfaces().Any(i => i.GetTypeInfo() == typeof(IBackgroundJob))).ToList()
+                .ForEach(x =>
+                {
+                    servicesBuilderOptions.BackgroundJobOptions.TryAddJob(x);
                 });
 
             var transientTypes = assemblyTypes.Where(type =>

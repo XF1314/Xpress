@@ -58,20 +58,26 @@ namespace Xpress.Core.BackgroundJobs
             return _jobConfigurationsByArgsType.Values.ToImmutableList();
         }
 
-        public void AddJob<TJob>()
+        public bool TryAddJob<TJob>()
         {
-            AddJob(typeof(TJob));
+            return TryAddJob(typeof(TJob));
         }
 
-        public void AddJob(Type jobType)
+        public bool TryAddJob(Type jobType)
         {
-            AddJob(new BackgroundJobConfiguration(jobType));
+            return TryAddJob(new BackgroundJobConfiguration(jobType));
         }
 
-        public void AddJob(BackgroundJobConfiguration jobConfiguration)
+        public bool TryAddJob(BackgroundJobConfiguration jobConfiguration)
         {
-            _jobConfigurationsByArgsType[jobConfiguration.ArgsType] = jobConfiguration;
-            _jobConfigurationsByName[jobConfiguration.JobName] = jobConfiguration;
+            if (!_jobConfigurationsByName.ContainsKey(jobConfiguration.JobName) && !_jobConfigurationsByArgsType.ContainsKey(jobConfiguration.ArgsType))
+            {
+                _jobConfigurationsByArgsType[jobConfiguration.ArgsType] = jobConfiguration;
+                _jobConfigurationsByName[jobConfiguration.JobName] = jobConfiguration;
+                return true;
+            }
+
+            return false;
         }
     }
 }

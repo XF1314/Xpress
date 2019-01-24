@@ -16,9 +16,9 @@ namespace Xpress.Core.BackgroundJobs
             Name = Check.NotNullOrWhiteSpace(name, nameof(name));
         }
 
-        public static string GetName<TJobArgs>()
+        public static string GetName<TArgs>() where TArgs : IBackgroundEventArgs
         {
-            return GetName(typeof(TJobArgs));
+            return GetName(typeof(TArgs));
         }
 
         public static string GetName([NotNull] Type jobArgsType)

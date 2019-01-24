@@ -9,23 +9,19 @@ namespace Xpress.Core.BackgroundJobs
 {
     public class HangfireBackgroundJobManager : IBackgroundJobManager, ISingletonDependency
     {
-        public Task<string> EnqueueAsync<TArgs>(TArgs args, BackgroundJobPriority priority = BackgroundJobPriority.Normal,TimeSpan? delay = null)
+        public Task<string> EnqueueAsync<TArgs>(TArgs args, BackgroundJobPriority priority = BackgroundJobPriority.Normal, TimeSpan? delay = null)
+            where TArgs : IBackgroundEventArgs
         {
             if (!delay.HasValue)
             {
                 return Task.FromResult(
-                    BackgroundJob.Enqueue<HangfireJobExecutionAdapter<TArgs>>(
-                        adapter => adapter.Execute(args)
-                    )
+                    BackgroundJob.Enqueue<HangfireJobExecutionAdapter<TArgs>>(adapter => adapter.Execute(args))
                 );
             }
             else
             {
                 return Task.FromResult(
-                    BackgroundJob.Schedule<HangfireJobExecutionAdapter<TArgs>>(
-                        adapter => adapter.Execute(args),
-                        delay.Value
-                    )
+                    BackgroundJob.Schedule<HangfireJobExecutionAdapter<TArgs>>(adapter => adapter.Execute(args), delay.Value)
                 );
             }
         }

@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Xpress.Core;
+using Xpress.Core.BackgroundJobs;
 using Xpress.Core.DependencyInjection;
 using Xpress.Core.EventBus.Local;
 
@@ -101,6 +102,14 @@ namespace Xpress.CastleWindsor
                     {
                         servicesBuilderOptions.LocalEventBusOptions.Handlers.Add(x);
                     }
+                });
+
+            assemblyTypes
+                .Where(type => type.IsClass && !type.IsAbstract
+                && type.GetInterfaces().Any(i => i.GetTypeInfo() == typeof(IBackgroundJob))).ToList()
+                .ForEach(x =>
+                {
+                    servicesBuilderOptions.BackgroundJobOptions.TryAddJob(x);
                 });
 
             _container.Register(Classes.FromAssembly(assembly)

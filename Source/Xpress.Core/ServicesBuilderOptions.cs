@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Xpress.Core.BackgroundJobs;
 using Xpress.Core.DependencyInjection;
 using Xpress.Core.EntityFramework;
 using Xpress.Core.EventBus.Local;
@@ -32,11 +33,17 @@ namespace Xpress.Core
         /// </summary>
         public LocalEventBusOptions LocalEventBusOptions { get; set; }
 
+        /// <summary>
+        /// Background job options
+        /// </summary>
+        public BackgroundJobOptions BackgroundJobOptions { get; set; }
+
         /// <inheritdoc />
         public ServicesBuilderOptions()
         {
             UowOptions = new DefaultUnitOfWorkOptions();
             LocalEventBusOptions = new LocalEventBusOptions();
+            BackgroundJobOptions = new BackgroundJobOptions();
         }
 
         /// <summary>
@@ -71,6 +78,12 @@ namespace Xpress.Core
                         x.Handlers.Add(y);
                     }
                 });
+            });
+
+            services.Configure<BackgroundJobOptions>(x =>
+            {
+                BackgroundJobOptions.GetJobs().ToList()
+                .ForEach(y => x.TryAddJob(y));
             });
 
             return IocRegister.GetServiceProvider(services);

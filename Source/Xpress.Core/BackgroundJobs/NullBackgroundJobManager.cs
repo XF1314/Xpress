@@ -18,6 +18,7 @@ namespace Xpress.Core.BackgroundJobs
         }
 
         public virtual async Task<string> EnqueueAsync<TArgs>(TArgs args, BackgroundJobPriority priority = BackgroundJobPriority.Normal, TimeSpan? delay = null)
+            where TArgs : IBackgroundEventArgs
         {
             Logger.LogInformation("Background job system has not a real implementation. If it's mandatory, use an implementation (either the default provider or a 3rd party implementation). If it's optional, check IBackgroundJobManager.IsAvailable() extension method and act based on it.");
 

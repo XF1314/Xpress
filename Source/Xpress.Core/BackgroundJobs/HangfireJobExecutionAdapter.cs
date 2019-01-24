@@ -6,16 +6,14 @@ using System.Text;
 
 namespace Xpress.Core.BackgroundJobs
 {
-    public class HangfireJobExecutionAdapter<TArgs>
+    public class HangfireJobExecutionAdapter<TArgs> where TArgs : IBackgroundEventArgs
     {
         protected BackgroundJobOptions Options { get; }
         protected IServiceScopeFactory ServiceScopeFactory { get; }
         protected IBackgroundJobExecuter JobExecuter { get; }
 
-        public HangfireJobExecutionAdapter(
-            IOptions<BackgroundJobOptions> options,
-            IBackgroundJobExecuter jobExecuter,
-            IServiceScopeFactory serviceScopeFactory)
+        public HangfireJobExecutionAdapter(IOptions<BackgroundJobOptions> options,
+            IBackgroundJobExecuter jobExecuter, IServiceScopeFactory serviceScopeFactory)
         {
             JobExecuter = jobExecuter;
             ServiceScopeFactory = serviceScopeFactory;

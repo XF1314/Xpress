@@ -1,6 +1,7 @@
 ﻿using Castle.Core.Logging;
 using Exceptionless;
 using Hangfire;
+using Hangfire.Dashboard;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
@@ -32,10 +33,16 @@ using Xpress.Demo.Application;
 using Xpress.Demo.Application.CapSubscribers;
 using Xpress.Demo.Core;
 using Xpress.Demo.EntityFramework;
+using HangfireRedisStorage = Hangfire.Redis.RedisStorage;
+using HangfireDashboardOptions = Hangfire.DashboardOptions;
+using Hangfire.Redis;
+using Xpress.Demo.Api.Filters;
+using Xpress.Demo.Application.RecurringJobs;
+using Hangfire.RecurringJobExtensions;
 
 namespace Xpress.Demo.Api
 {
-    
+
     public class Startup
     {
         public IConfiguration Configuration { get; private set; }
@@ -57,10 +64,32 @@ namespace Xpress.Demo.Api
             //RDBMS Storage
             services.AddDbContext<EfDbContextBase, DemoDbContext>(options => options.UseMySql(Configuration.GetConnectionString("Default")));
 
-            //Job Storage
+            //Hangfire Job
             var jobRedisConnectionString = Configuration.GetConnectionString("JobRedis");
             var jobRedisConnection = ConnectionMultiplexer.Connect(jobRedisConnectionString);
-            services.AddHangfire(x => x.UseRedisStorage(jobRedisConnection));
+            services.AddHangfire(x =>
+            {
+                x.UseRedisStorage(jobRedisConnection); //Job Storage
+                x.UseRecurringJob(typeof(TestRecurringJob));
+                x.UseDashboardMetric(DashboardMetrics.ServerCount)// DashboardMetric
+                    .UseDashboardMetric(DashboardMetrics.RecurringJobCount)
+                    .UseDashboardMetric(DashboardMetrics.RetriesCount)
+                    .UseDashboardMetric(DashboardMetrics.AwaitingCount)
+                    .UseDashboardMetric(DashboardMetrics.EnqueuedAndQueueCount)
+                    .UseDashboardMetric(DashboardMetrics.ScheduledCount)
+                    .UseDashboardMetric(DashboardMetrics.ProcessingCount)
+                    .UseDashboardMetric(DashboardMetrics.SucceededCount)
+                    .UseDashboardMetric(DashboardMetrics.FailedCount)
+                    .UseDashboardMetric(DashboardMetrics.DeletedCount);
+                if (JobStorage.Current is HangfireRedisStorage redisStorage)
+                {
+                    x.UseDashboardMetric(
+                        redisStorage.GetDashboardMetricFromRedisInfo("使用内存", RedisInfoKeys.used_memory_human));
+                    x.UseDashboardMetric(
+                        redisStorage.GetDashboardMetricFromRedisInfo("高峰内存", RedisInfoKeys.used_memory_peak_human));
+                }
+
+            });
 
             //Data Protection
             var applicationDiscriminator = Configuration.GetValue<string>("ApplicationDiscriminator");
@@ -142,6 +171,19 @@ namespace Xpress.Demo.Api
             app.UseExceptionless(Configuration);
             app.UseMiddleware<UnitOfWorkMiddleware>();//需要注意Middleware的位置
             app.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v1/swagger.json", "Xpress示例项目API"));
+            app.UseHangfireServer(new BackgroundJobServerOptions
+            {
+                WorkerCount = Math.Min(Environment.ProcessorCount * 5, 20),
+                Queues = new string[] { "default" }
+            });
+            app.UseHangfireDashboard("/hangfire", new HangfireDashboardOptions()
+            {
+                DisplayStorageConnectionString = false,
+                Authorization = new IDashboardAuthorizationFilter[]
+                {
+                    new JobAuthorizationFilter(env)
+                }
+            });
         }
     }
 }

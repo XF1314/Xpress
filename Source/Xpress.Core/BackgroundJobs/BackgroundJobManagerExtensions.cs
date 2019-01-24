@@ -20,6 +20,7 @@ namespace Xpress.Core.BackgroundJobs
         /// <param name="priority">Job priority.</param>
         /// <param name="delay">Job delay (wait duration before first try).</param>
         public static string Enqueue<TArgs>(this IBackgroundJobManager backgroundJobManager, TArgs args, BackgroundJobPriority priority = BackgroundJobPriority.Normal, TimeSpan? delay = null)
+            where TArgs : IBackgroundEventArgs
         {
             return AsyncHelper.RunSync(() => backgroundJobManager.EnqueueAsync<TArgs>(args, priority, delay));
         }

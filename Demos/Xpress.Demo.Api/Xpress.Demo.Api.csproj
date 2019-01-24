@@ -33,6 +33,7 @@
     <PackageReference Include="DotNetCore.CAP.RabbitMQ" Version="2.4.2" />
     <PackageReference Include="Exceptionless.AspNetCore" Version="4.3.2012" />
     <PackageReference Include="Exceptionless.NLog" Version="4.3.2012" />
+    <PackageReference Include="Hangfire.RecurringJobExtensions" Version="1.1.6" />
     <PackageReference Include="Hangfire.Redis.StackExchange.StrongName" Version="1.7.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="2.2.0" />

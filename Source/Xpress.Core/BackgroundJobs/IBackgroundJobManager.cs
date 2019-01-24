@@ -18,6 +18,6 @@ namespace Xpress.Core.BackgroundJobs
         /// <param name="priority">Job priority.</param>
         /// <param name="delay">Job delay (wait duration before first try).</param>
         /// <returns>Unique identifier of a background job.</returns>
-        Task<string> EnqueueAsync<TArgs>(TArgs args, BackgroundJobPriority priority = BackgroundJobPriority.Normal, TimeSpan? delay = null);
+        Task<string> EnqueueAsync<TArgs>(TArgs args, BackgroundJobPriority priority = BackgroundJobPriority.Normal, TimeSpan? delay = null) where TArgs : IBackgroundEventArgs;
     }
 }
